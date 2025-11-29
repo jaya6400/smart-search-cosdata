@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         
@@ -42,6 +42,9 @@
         .card h2 {
             margin-bottom: 20px;
             color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .input-group {
@@ -123,33 +126,107 @@
         .results {
             margin-top: 20px;
         }
+
+        .results-header {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .results-header h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .results-header p {
+            color: #666;
+            font-size: 14px;
+        }
         
         .result-item {
-            background: #f8f9fa;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s;
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            position: relative;
         }
         
         .result-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #667eea;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
         }
-        
-        .result-item strong {
-            color: #667eea;
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .result-rank {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
         }
         
         .result-score {
-            display: inline-block;
-            background: #667eea;
+            background: #28a745;
             color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 6px 16px;
+            border-radius: 20px;
             font-size: 14px;
-            margin-left: 10px;
+            font-weight: 600;
+        }
+
+        .result-id {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #495057;
+            border-left: 3px solid #667eea;
+        }
+
+        .result-id strong {
+            color: #667eea;
+            margin-right: 8px;
+        }
+
+        .result-text {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            line-height: 1.6;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .result-text strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
 
         .sample-data {
@@ -173,6 +250,57 @@
             margin-right: 10px;
             margin-top: 5px;
         }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-results svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .debug-panel {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .debug-panel h4 {
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -187,6 +315,8 @@
                 <button onclick="loadSample(1)">AI Technology</button>
                 <button onclick="loadSample(2)">Climate Change</button>
                 <button onclick="loadSample(3)">Space Exploration</button>
+                <button onclick="loadSample(4)">Renewable Energy</button>
+                <button onclick="loadSample(5)">Machine Learning</button>
             </div>
 
             <div class="input-group">
@@ -197,7 +327,7 @@
                 <label for="docText">Document Text:</label>
                 <textarea id="docText" placeholder="Enter your document content here..."></textarea>
             </div>
-            <button onclick="addDocument()">Add Document</button>
+            <button onclick="addDocument()" id="addBtn">Add Document</button>
             <div id="addStatus" class="status hidden"></div>
         </div>
         
@@ -205,9 +335,9 @@
             <h2>🔎 Search Documents</h2>
             <div class="input-group">
                 <label for="searchQuery">Search Query:</label>
-                <input type="text" id="searchQuery" placeholder="What are you looking for?">
+                <input type="text" id="searchQuery" placeholder="What are you looking for? (e.g., machine learning, climate, space)">
             </div>
-            <button onclick="searchDocuments()">Search</button>
+            <button onclick="searchDocuments()" id="searchBtn">Search</button>
             <div id="searchStatus" class="status hidden"></div>
             <div id="results" class="results"></div>
         </div>
@@ -226,6 +356,14 @@
             3: {
                 id: "doc_space_1",
                 text: "Space exploration has led to amazing discoveries about our universe. Mars rovers are searching for signs of ancient life, while telescopes reveal distant galaxies billions of light years away."
+            },
+            4: {
+                id: "doc_energy_1",
+                text: "Solar panels and wind turbines are becoming more efficient and affordable. Renewable energy technologies are essential for sustainable development and reducing our dependence on fossil fuels."
+            },
+            5: {
+                id: "doc_ml_1",
+                text: "Machine learning algorithms can analyze vast amounts of data to identify trends and make predictions. Supervised learning, unsupervised learning, and reinforcement learning are key approaches in modern AI systems."
             }
         };
 
@@ -239,7 +377,7 @@
             const docId = document.getElementById('docId').value.trim();
             const docText = document.getElementById('docText').value.trim();
             const statusEl = document.getElementById('addStatus');
-            const button = event.target;
+            const button = document.getElementById('addBtn');
             
             if (!docId || !docText) {
                 showStatus(statusEl, '⚠️ Please fill in all fields', 'error');
@@ -262,7 +400,7 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    showStatus(statusEl, '✅ Document added successfully!', 'success');
+                    showStatus(statusEl, '✅ Document added successfully! ID: ' + docId, 'success');
                     document.getElementById('docId').value = '';
                     document.getElementById('docText').value = '';
                 } else {
@@ -280,7 +418,7 @@
             const query = document.getElementById('searchQuery').value.trim();
             const statusEl = document.getElementById('searchStatus');
             const resultsEl = document.getElementById('results');
-            const button = event.target;
+            const button = document.getElementById('searchBtn');
             
             if (!query) {
                 showStatus(statusEl, '⚠️ Please enter a search query', 'error');
@@ -289,7 +427,8 @@
             
             button.disabled = true;
             button.textContent = 'Searching...';
-            resultsEl.innerHTML = '<p style="color: #666;">Searching...</p>';
+            resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            statusEl.classList.add('hidden');
             
             try {
                 const response = await fetch('/api/search', {
@@ -302,10 +441,10 @@
                 });
                 
                 const data = await response.json();
+                console.log('Full API Response:', data);
                 
                 if (response.ok && data.success) {
-                    displayResults(data.results, resultsEl);
-                    statusEl.classList.add('hidden');
+                    displayResults(data.results, query, resultsEl);
                 } else {
                     showStatus(statusEl, '❌ Error: ' + (data.detail || 'Unknown error'), 'error');
                     resultsEl.innerHTML = '';
@@ -319,26 +458,105 @@
             }
         }
         
-        function displayResults(results, container) {
-            if (!results || results.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No results found. Try adding some documents first!</p>';
+        function highlightText(text, query) {
+            if (!text || !query) return text;
+            
+            const words = query.toLowerCase().split(' ');
+            let highlighted = text;
+            
+            words.forEach(word => {
+                if (word.length > 2) {
+                    const regex = new RegExp(`(${word})`, 'gi');
+                    highlighted = highlighted.replace(regex, '<span class="highlight">$1</span>');
+                }
+            });
+            
+            return highlighted;
+        }
+        
+        function displayResults(results, query, container) {
+            console.log('Processing results:', results);
+            console.log('Results type:', typeof results);
+            
+            // Handle different response formats
+            let resultArray = [];
+            
+            if (Array.isArray(results)) {
+                resultArray = results;
+            } else if (results && typeof results === 'object') {
+                if (results.results && Array.isArray(results.results)) {
+                    resultArray = results.results;
+                } else if (results.matches && Array.isArray(results.matches)) {
+                    resultArray = results.matches;
+                } else {
+                    resultArray = Object.values(results);
+                }
+            }
+            
+            console.log('Result array:', resultArray);
+            
+            if (!resultArray || resultArray.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3>No results found</h3>
+                        <p style="margin-top: 10px;">Try adding some documents first or use a different search query</p>
+                    </div>
+                `;
                 return;
             }
             
-            container.innerHTML = results.map((result, index) => `
-                <div class="result-item">
-                    <div>
-                        <strong>Result ${index + 1}</strong>
-                        ${result.score !== undefined ? `<span class="result-score">Score: ${result.score.toFixed(4)}</span>` : ''}
-                    </div>
-                    <div style="margin-top: 10px;">
-                        <strong>ID:</strong> ${result.id || result.vector_id || 'N/A'}
-                    </div>
-                    <div style="margin-top: 8px; color: #666;">
-                        <strong>Text:</strong> ${result.metadata?.text || result.text || 'No text available'}
-                    </div>
+            const headerHTML = `
+                <div class="results-header">
+                    <h3>🎯 Search Results for "${query}"</h3>
+                    <p>Found ${resultArray.length} matching document(s)</p>
                 </div>
-            `).join('');
+            `;
+            
+            const resultsHTML = resultArray.map((result, index) => {
+                console.log(`Result ${index}:`, result);
+                
+                // Extract fields from different possible structures
+                const id = result.id || result.vector_id || result.document_id || `result_${index + 1}`;
+                const score = result.score || result.distance || result.similarity || 0;
+                const text = result.metadata?.text || result.text || result.content || result.raw_text || 'No text available';
+                
+                // Highlight matching keywords
+                const highlightedText = highlightText(text, query);
+                
+                // Calculate similarity percentage
+                const similarityPercent = (score * 100).toFixed(1);
+                
+                return `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-rank">${index + 1}</div>
+                            <div class="result-score">${similarityPercent}% Match</div>
+                        </div>
+                        
+                        <div class="result-id">
+                            <strong>Document ID:</strong> ${id}
+                        </div>
+                        
+                        <div class="result-text">
+                            <strong>📄 Retrieved Content:</strong>
+                            <div>${highlightedText}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add debug panel
+            const debugHTML = `
+                <div class="debug-panel">
+                    <h4>🔧 Debug: Raw API Response</h4>
+                    <pre>${JSON.stringify(results, null, 2)}</pre>
+                </div>
+            `;
+            
+            container.innerHTML = headerHTML + resultsHTML + debugHTML;
         }
         
         function showStatus(element, message, type) {
@@ -351,6 +569,12 @@
         document.getElementById('searchQuery').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 searchDocuments();
+            }
+        });
+
+        document.getElementById('docText').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                addDocument();
             }
         });
 
