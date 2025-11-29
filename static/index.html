@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Search with CosData</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+        
+        .result-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .result-item strong {
+            color: #667eea;
+        }
+        
+        .result-score {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .sample-data {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .sample-data h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .sample-data button {
+            background: #2196F3;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Smart Search with CosData</h1>
+        
+        <div class="card">
+            <h2>📝 Add Document</h2>
+            
+            <div class="sample-data">
+                <h3>Quick Start - Load Sample Data:</h3>
+                <button onclick="loadSample(1)">AI Technology</button>
+                <button onclick="loadSample(2)">Climate Change</button>
+                <button onclick="loadSample(3)">Space Exploration</button>
+            </div>
+
+            <div class="input-group">
+                <label for="docId">Document ID:</label>
+                <input type="text" id="docId" placeholder="e.g., doc_1, article_123">
+            </div>
+            <div class="input-group">
+                <label for="docText">Document Text:</label>
+                <textarea id="docText" placeholder="Enter your document content here..."></textarea>
+            </div>
+            <button onclick="addDocument()">Add Document</button>
+            <div id="addStatus" class="status hidden"></div>
+        </div>
+        
+        <div class="card">
+            <h2>🔎 Search Documents</h2>
+            <div class="input-group">
+                <label for="searchQuery">Search Query:</label>
+                <input type="text" id="searchQuery" placeholder="What are you looking for?">
+            </div>
+            <button onclick="searchDocuments()">Search</button>
+            <div id="searchStatus" class="status hidden"></div>
+            <div id="results" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const sampleData = {
+            1: {
+                id: "doc_ai_1",
+                text: "Artificial intelligence and machine learning are transforming how we interact with technology. Neural networks and deep learning enable computers to recognize patterns and make decisions."
+            },
+            2: {
+                id: "doc_climate_1",
+                text: "Climate change is causing rising temperatures and extreme weather events globally. Renewable energy sources like solar and wind power are crucial for reducing carbon emissions."
+            },
+            3: {
+                id: "doc_space_1",
+                text: "Space exploration has led to amazing discoveries about our universe. Mars rovers are searching for signs of ancient life, while telescopes reveal distant galaxies billions of light years away."
+            }
+        };
+
+        function loadSample(num) {
+            const sample = sampleData[num];
+            document.getElementById('docId').value = sample.id;
+            document.getElementById('docText').value = sample.text;
+        }
+
+        async function addDocument() {
+            const docId = document.getElementById('docId').value.trim();
+            const docText = document.getElementById('docText').value.trim();
+            const statusEl = document.getElementById('addStatus');
+            const button = event.target;
+            
+            if (!docId || !docText) {
+                showStatus(statusEl, '⚠️ Please fill in all fields', 'error');
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Adding...';
+            
+            try {
+                const response = await fetch('/api/documents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: docId,
+                        text: docText
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showStatus(statusEl, '✅ Document added successfully!', 'success');
+                    document.getElementById('docId').value = '';
+                    document.getElementById('docText').value = '';
+                } else {
+                    showStatus(statusEl, '❌ Error: ' + (data.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showStatus(statusEl, '❌ Error: ' + error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Add Document';
+            }
+        }
+        
+        async function searchDocuments() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const statusEl = document.getElementById('searchStatus');
+            const resultsEl = document.getElementById('results');
+            const button = event.target;
+            
+            if (!query) {
+                showStatus(statusEl, '⚠️ Please enter a search query', 'error');
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Searching...';
+            resultsEl.innerHTML = '<p style="color: #666;">Searching...</p>';
+            
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        top_k: 5
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    displayResults(data.results, resultsEl);
+                    statusEl.classList.add('hidden');
+                } else {
+                    showStatus(statusEl, '❌ Error: ' + (data.detail || 'Unknown error'), 'error');
+                    resultsEl.innerHTML = '';
+                }
+            } catch (error) {
+                showStatus(statusEl, '❌ Error: ' + error.message, 'error');
+                resultsEl.innerHTML = '';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Search';
+            }
+        }
+        
+        function displayResults(results, container) {
+            if (!results || results.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No results found. Try adding some documents first!</p>';
+                return;
+            }
+            
+            container.innerHTML = results.map((result, index) => `
+                <div class="result-item">
+                    <div>
+                        <strong>Result ${index + 1}</strong>
+                        ${result.score !== undefined ? `<span class="result-score">Score: ${result.score.toFixed(4)}</span>` : ''}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>ID:</strong> ${result.id || result.vector_id || 'N/A'}
+                    </div>
+                    <div style="margin-top: 8px; color: #666;">
+                        <strong>Text:</strong> ${result.metadata?.text || result.text || 'No text available'}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.classList.remove('hidden');
+        }
+        
+        // Enter key support
+        document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchDocuments();
+            }
+        });
+
+        // Check health on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                console.log('✅ Backend connected:', data);
+            } catch (error) {
+                console.error('❌ Backend connection failed:', error);
+            }
+        });
+    </script>
+</body>
+</html>
