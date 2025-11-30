@@ -4,7 +4,7 @@ A complete AI-powered semantic search application built with FastAPI and CosData
 
 **Website:**
 
-**Demo Link:**
+**Demo Link:** [Link]( https://www.youtube.com/watch?v=PjArOg-Q0tI)
 
 ## 🌟 Features
 
