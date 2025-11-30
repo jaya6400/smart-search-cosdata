@@ -2,6 +2,10 @@
 
 A complete AI-powered semantic search application built with FastAPI and CosData OSS. This project enables you to store documents as vector embeddings and search them using similarity matching - all running locally without any paid APIs!
 
+**Website:**
+
+**Demo Link:**
+
 ## 🌟 Features
 
 - ✅ **Vector-based semantic search** - Find similar documents using embeddings
@@ -15,6 +19,8 @@ A complete AI-powered semantic search application built with FastAPI and CosData
 - ✅ **In-memory document store** - Reliable text retrieval
 
 ---
+
+<img width="765" height="403" alt="Captureweb" src="https://github.com/user-attachments/assets/9e2185a8-a960-48bb-80b1-761a530537eb" />
 
 ## 📋 Prerequisites
 
@@ -316,22 +322,9 @@ The backend requires a long-running server. Deploy to:
 
 4. **AWS EC2 / Google Cloud Run / Azure**
 
-### Frontend Deployment (Vercel):
-
-Create `vercel.json`:
-```json
-{
-  "routes": [
-    { "src": "/(.*)", "dest": "/static/$1" }
-  ]
-}
-```
-
-Deploy:
-```bash
-npm install -g vercel
-vercel
-```
+### Frontend Deployment:
+1. **Vercel**
+2. **Netlify**
 
 **Important:** Update API URLs in `index.html` to point to your deployed backend.
 
@@ -470,7 +463,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [CosData](https://cosdata.io) - Open-source vector database
 - [FastAPI](https://fastapi.tiangolo.com) - Modern Python web framework
@@ -491,6 +484,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For other languages or better quality, see [SBERT Pretrained Models](https://www.sbert.net/docs/pretrained_models.html).
 
 ---
+
+## Screenshots
+- <img width="676" height="421" alt="Captureweb2" src="https://github.com/user-attachments/assets/3a3b395e-6275-43c7-8322-5bfc0ccc6e90" />
+- <img width="593" height="400" alt="Captureterminal" src="https://github.com/user-attachments/assets/0ca3e152-073e-45a5-ae23-37f97231ab06" />
+
+
 
 **Author: Jaya Dubey**
 
