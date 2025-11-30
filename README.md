@@ -6,12 +6,13 @@ A complete AI-powered semantic search application built with FastAPI and CosData
 
 - ✅ **Vector-based semantic search** - Find similar documents using embeddings
 - ✅ **CosData integration** - Open-source vector database
-- ✅ **Offline embeddings** - No OpenAI or external API required
+- ✅ **Real AI embeddings** - Using sentence-transformers (all-MiniLM-L6-v2)
+- ✅ **Offline operation** - No OpenAI or external API required
 - ✅ **FastAPI backend** - Modern, fast Python API
-- ✅ **Beautiful UI** - Clean, responsive frontend
+- ✅ **Beautiful UI** - Clean, responsive frontend with keyword highlighting
 - ✅ **Docker setup** - One command to start the database
 - ✅ **Windows compatible** - Works with Git Bash
-- ✅ **Vercel ready** - Deploy frontend easily
+- ✅ **In-memory document store** - Reliable text retrieval
 
 ---
 
@@ -22,6 +23,7 @@ Before you begin, ensure you have:
 - **Docker Desktop** - [Download here](https://www.docker.com/products/docker-desktop/)
 - **Python 3.8+** - [Download here](https://www.python.org/downloads/)
 - **Git Bash** (Windows) - [Download here](https://git-scm.com/downloads)
+- **~500MB disk space** - For sentence-transformers model
 
 ---
 
@@ -90,28 +92,26 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
 ---
 
-## 📦 Step 3: Dependencies
+## 📦 Step 3: Install Dependencies
 
-Create a `requirements.txt` file with:
+The `requirements.txt` includes:
 ```txt
 fastapi==0.104.1
 uvicorn==0.24.0
-httpx==0.25.2
 numpy==1.24.3
 python-multipart==0.0.6
+sentence-transformers==2.2.2
+cosdata-client
 ```
 
-Then install:
+Install all dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+
+**Note:** First run will download the `all-MiniLM-L6-v2` model (~80MB). This happens automatically.
 
 ---
 
@@ -131,15 +131,13 @@ python main.py
 
 ### You should see:
 ```
-==================================================
-🚀 Starting CosData Smart Search Server
-==================================================
+Loading MiniLM model...
+✅ MiniLM loaded!
 INFO:     Started server process
 INFO:     Uvicorn running on http://0.0.0.0:3000
-🚀 Starting CosData Smart Search...
-✅ CosData client initialized
-✅ Collection 'smart_search' created
-✅ Initialization complete!
+✅ Connected to CosData server
+✅ Using existing collection: smartsearch
+✅ HNSW index created
 ```
 
 ### Backend is now running at:
@@ -155,9 +153,9 @@ http://localhost:3000
 ```
 
 You should see the Smart Search interface with:
-- **Add Document** section
+- **Add Document** section with 5 sample data buttons
 - **Search Documents** section
-- Sample data buttons for quick testing
+- Beautiful gradient UI with result highlighting
 
 ---
 
@@ -165,17 +163,22 @@ You should see the Smart Search interface with:
 
 ### Adding Documents:
 
-1. Click one of the sample data buttons (AI Technology, Climate Change, or Space Exploration)
+1. Click one of the sample data buttons (AI Technology, Climate Change, Space Exploration, Renewable Energy, Machine Learning)
 2. Or manually enter:
    - **Document ID:** `doc_1`
    - **Document Text:** `Your text content here`
 3. Click **Add Document**
+4. You should see: ✅ Document added successfully!
 
 ### Searching Documents:
 
-1. Enter a search query (e.g., "machine learning", "climate", "space")
-2. Click **Search**
-3. View ranked results with similarity scores
+1. Enter a search query (e.g., "machine learning", "climate", "space exploration")
+2. Click **Search** or press Enter
+3. View ranked results with:
+   - Similarity scores (higher = better match)
+   - Document IDs
+   - Full document text with highlighted keywords
+   - Debug panel showing raw API response
 
 ---
 
@@ -189,9 +192,10 @@ GET /api/health
 **Response:**
 ```json
 {
-  "status": "healthy",
-  "cosdata": "connected",
-  "collections": 1
+  "status": "running",
+  "collection_ready": true,
+  "stored_docs": 5,
+  "document_ids": ["doc_ai_1", "doc_climate_1", "doc_space_1", "doc_energy_1", "doc_ml_1"]
 }
 ```
 
@@ -210,7 +214,6 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "message": "Document added successfully",
   "id": "doc_1"
 }
 ```
@@ -233,13 +236,32 @@ Content-Type: application/json
   "results": [
     {
       "id": "doc_1",
-      "score": 0.9234,
-      "metadata": {
-        "text": "Document content..."
-      }
+      "score": 0.8534,
+      "text": "Document content..."
     }
   ],
-  "query": "your search query"
+  "query": "your search query",
+  "debug": {
+    "raw_results_type": "<class 'list'>",
+    "documents_in_store": ["doc_1", "doc_2"]
+  }
+}
+```
+
+### List All Documents
+```http
+GET /api/documents
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 3,
+  "documents": [
+    {"id": "doc_1", "text": "Document 1 content"},
+    {"id": "doc_2", "text": "Document 2 content"}
+  ]
 }
 ```
 
@@ -249,9 +271,9 @@ Content-Type: application/json
 ```
 smart-search-cosdata/
 │
-├── main.py                 # FastAPI backend server
+├── main.py                 # FastAPI backend with sentence-transformers
 ├── static/
-│   └── index.html         # Frontend UI
+│   └── index.html         # Frontend UI with search highlighting
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file
 ├── venv/                  # Virtual environment (not committed)
@@ -260,12 +282,41 @@ smart-search-cosdata/
 
 ---
 
-## 🚀 Deployment
+## 🧠 How It Works
 
-### Backend:
-Deploy to Railway.app, Render.com, Fly.io, or any platform supporting Python web apps.
+### 1. **Embedding Generation**
+- Uses `sentence-transformers/all-MiniLM-L6-v2` model
+- Converts text to 384-dimensional vectors
+- Normalized for cosine similarity search
 
-### Frontend (Vercel):
+### 2. **Document Storage**
+- **CosData Vector DB:** Stores embeddings for fast similarity search
+- **In-Memory Store:** Stores original text for retrieval
+- Dual storage ensures reliable text recovery
+
+### 3. **Semantic Search**
+- Query converted to embedding using same model
+- CosData performs HNSW (Hierarchical Navigable Small World) search
+- Returns top-k most similar documents
+- Results enhanced with stored text content
+
+---
+
+## 🚀 Deployment (If need in production)
+
+### Backend Deployment:
+
+The backend requires a long-running server. Deploy to:
+
+1. **Railway.app** (Recommended)
+
+2. **Render.com**
+
+3. **Fly.io**
+
+4. **AWS EC2 / Google Cloud Run / Azure**
+
+### Frontend Deployment (Vercel):
 
 Create `vercel.json`:
 ```json
@@ -282,7 +333,7 @@ npm install -g vercel
 vercel
 ```
 
-**Note:** Update frontend to point to your deployed backend URL.
+**Important:** Update API URLs in `index.html` to point to your deployed backend.
 
 ---
 
@@ -296,7 +347,7 @@ docker logs cosdata-server
 # Restart container
 docker restart cosdata-server
 
-# Remove and recreate
+# Fresh start
 docker stop cosdata-server
 docker rm cosdata-server
 docker run -d --name cosdata-server -p 8443:8443 -p 50051:50051 cosdataio/cosdata:latest
@@ -311,20 +362,23 @@ netstat -ano | findstr "3000"
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### Module not found errors:
+### Model download issues:
 ```bash
-# Reinstall dependencies
-pip install --upgrade -r requirements.txt
-
-# Verify virtual environment is activated
-which python  # Should show path to venv
+# Manually download model
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 ```
 
-### Connection refused errors:
+### "Collection not ready" errors:
 
 1. Verify CosData is running: `docker ps`
-2. Check if ports are accessible: `curl http://localhost:8443`
-3. Ensure no firewall is blocking ports 8443, 50051, or 3000
+2. Check backend logs for initialization errors
+3. Restart backend: `python main.py`
+
+### No text in search results:
+
+- Documents added before the in-memory store won't have text
+- Solution: Re-add your documents
+- The in-memory store persists only during server runtime
 
 ---
 
@@ -334,14 +388,23 @@ which python  # Should show path to venv
 
 In `main.py`:
 ```python
-COSDATA_URL = "http://your-cosdata-host:8443"
+cosdata_client = Client(
+    host="http://your-cosdata-host:8443",
+    username="admin",
+    password="your-admin-key",
+    verify=False
+)
 ```
 
-### Change embedding dimension:
+### Use a different embedding model:
 ```python
-def generate_embedding(text: str, dimension: int = 768):  # Change from 384
-    # ... rest of code
+# Available models: https://www.sbert.net/docs/pretrained_models.html
+model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')  # Multilingual
+# or
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')  # Higher quality, slower
 ```
+
+**Note:** Change `VECTOR_DIM` to match your model's output dimension.
 
 ### Change collection name:
 ```python
@@ -350,39 +413,33 @@ COLLECTION_NAME = "my_custom_collection"
 
 ---
 
-## 📚 Next Steps & Enhancements
+## 📚 Advanced Features
 
-### Use Real Embeddings:
-
-Replace the dummy embedding function with a real model:
-```bash
-pip install sentence-transformers
-```
+### Batch Document Upload:
 ```python
-from sentence_transformers import SentenceTransformer
-
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
-def generate_embedding(text: str) -> List[float]:
-    return model.encode(text).tolist()
+# Add to main.py
+@app.post("/api/documents/batch")
+async def add_documents_batch(docs: List[DocumentRequest]):
+    results = []
+    for doc in docs:
+        try:
+            embedding = generate_embedding(doc.text)
+            documents_store[doc.id] = {"id": doc.id, "text": doc.text}
+            # ... insert into CosData
+            results.append({"id": doc.id, "success": True})
+        except Exception as e:
+            results.append({"id": doc.id, "success": False, "error": str(e)})
+    return {"results": results}
 ```
 
-### Add Authentication:
+### File Upload Support:
 ```bash
-pip install python-jose passlib
+pip install python-multipart PyPDF2 python-docx
 ```
 
-### Add File Upload:
+### Persistent Document Storage:
 
-Support PDF, DOCX, TXT file uploads for automatic indexing.
-
-### Add Metadata Filtering:
-
-Filter search results by date, category, author, etc.
-
-### Add Batch Import:
-
-Upload CSV/JSON files with multiple documents at once.
+Replace in-memory store with SQLite or PostgreSQL for production.
 
 ---
 
@@ -391,9 +448,9 @@ Upload CSV/JSON files with multiple documents at once.
 Contributions are welcome! Please:
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
 5. Open a Pull Request
 
 ---
@@ -406,9 +463,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 💬 Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/smart-search-cosdata/issues)
+- **Issues:** [GitHub Issues](https://github.com/jaya6400/smart-search-cosdata/issues)
 - **CosData Docs:** [https://docs.cosdata.io](https://docs.cosdata.io)
 - **FastAPI Docs:** [https://fastapi.tiangolo.com](https://fastapi.tiangolo.com)
+- **Sentence Transformers:** [https://www.sbert.net](https://www.sbert.net)
 
 ---
 
@@ -416,7 +474,21 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - [CosData](https://cosdata.io) - Open-source vector database
 - [FastAPI](https://fastapi.tiangolo.com) - Modern Python web framework
+- [Sentence Transformers](https://www.sbert.net) - State-of-the-art embeddings
 - All contributors and users of this project
+
+---
+
+## 📊 Model Performance
+
+**all-MiniLM-L6-v2** specifications:
+- **Size:** ~80MB
+- **Dimensions:** 384
+- **Speed:** ~14,000 sentences/second (GPU), ~3,000 (CPU)
+- **Quality:** Optimized for semantic similarity
+- **Languages:** English only
+
+For other languages or better quality, see [SBERT Pretrained Models](https://www.sbert.net/docs/pretrained_models.html).
 
 ---
 
