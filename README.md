@@ -2,7 +2,7 @@
 
 A complete AI-powered semantic search application built with FastAPI and CosData OSS. This project enables you to store documents as vector embeddings and search them using similarity matching - all running locally without any paid APIs!
 
-**Website:**
+**Website:** [Link](https://smart-search-cosdata-jd.vercel.app/)
 
 **Demo Link:** [Link]( https://www.youtube.com/watch?v=PjArOg-Q0tI)
 
