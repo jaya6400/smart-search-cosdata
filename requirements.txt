@@ -18,7 +18,7 @@ datasets==4.4.1
 dill==0.4.0
 dotenv==0.9.9
 fastapi==0.122.0
-filelock==3.20.0
+filelock==3.20.1
 flatbuffers==25.9.23
 frozenlist==1.8.0
 fsspec==2025.10.0
